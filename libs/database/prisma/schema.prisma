@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Org {
+  id             String  @id @default(cuid())
+  name           String  @db.VarChar(255)
+  company_domain String  @db.VarChar(255)
+  website        String? @db.VarChar(255)
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  org_users           OrgUser[]
+  projects            Project[]
+  tenants             Tenant[]
+  konnector_templates KonnectorTemplate[]
+  tenant_users        TenantUser[]
+  event_logs          EventLog[]
+  konnectors          Konnector[]
+
+  @@index([company_domain])
+  @@map("orgs")
+}
+
+enum OrgRole {
+  ADMIN
+  USER
+}
+
+model OrgUser {
+  id           String    @id @default(cuid())
+  name         String    @db.VarChar(255)
+  email        String    @db.VarChar(255)
+  username     String    @db.VarChar(100)
+  role         OrgRole   @default(USER)
+  password     String    @db.VarChar(255)
+  activated_at DateTime? @db.Timestamptz(6)
+
+  // Foreign keys
+  org_id String
+  org    Org    @relation(fields: [org_id], references: [id])
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([email])
+  @@index([org_id])
+  @@map("org_users")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+  DEVELOPMENT
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String        @db.VarChar(255)
+  description String?       @db.Text
+  org_id      String
+  status      ProjectStatus @default(ACTIVE)
+
+  // Relations
+  org                 Org                 @relation(fields: [org_id], references: [id])
+  tenants             Tenant[]
+  tenant_users        TenantUser[]
+  event_logs          EventLog[]
+  konnectors          Konnector[]
+  konnector_templates KonnectorTemplate[]
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([org_id])
+  @@index([status])
+  @@map("projects")
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ONBOARDING
+}
+
+model Tenant {
+  id                String       @id @default(cuid())
+  project_id        String
+  org_id            String
+  status            TenantStatus @default(ONBOARDING)
+  status_reason     String?      @db.VarChar(255)
+  status_changed_at DateTime?    @db.Timestamptz(6)
+
+  // Relations
+  project      Project      @relation(fields: [project_id], references: [id])
+  org          Org          @relation(fields: [org_id], references: [id])
+  tenant_users TenantUser[]
+  event_logs   EventLog[]
+  konnectors   Konnector[]
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([project_id])
+  @@index([org_id])
+  @@map("tenants")
+}
+
+model TenantUser {
+  id                  String @id @default(cuid())
+  tenant_id           String
+  email               String @db.VarChar(255)
+  external_enduser_id String @db.VarChar(255)
+  name                String @db.VarChar(255)
+  project_id          String
+  org_id              String
+
+  // Relations
+  tenant     Tenant      @relation(fields: [tenant_id], references: [id])
+  project    Project     @relation(fields: [project_id], references: [id])
+  org        Org         @relation(fields: [org_id], references: [id])
+  event_logs EventLog[]
+  konnectors Konnector[]
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([tenant_id])
+  @@index([email])
+  @@index([project_id])
+  @@index([org_id])
+  @@map("tenant_users")
+}
+
+model EventLog {
+  id             String @id @default(cuid())
+  tenant_id      String
+  tenant_user_id String
+  event_type     String @db.VarChar(100)
+  event_data     Json
+  project_id     String
+  org_id         String
+
+  // Relations
+  tenant      Tenant     @relation(fields: [tenant_id], references: [id])
+  tenant_user TenantUser @relation(fields: [tenant_user_id], references: [id])
+  project     Project    @relation(fields: [project_id], references: [id])
+  org         Org        @relation(fields: [org_id], references: [id])
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([tenant_id])
+  @@index([tenant_user_id])
+  @@index([event_type])
+  @@index([project_id])
+  @@index([org_id])
+  @@map("event_logs")
+}
+
+enum KonnectorStatus {
+  ACTIVE
+  INACTIVE
+  CONFIGURING
+  ERROR
+}
+
+model Konnector {
+  id                String          @id @default(cuid())
+  tenant_id         String
+  tenant_user_id    String
+  template_id       String
+  name              String          @db.VarChar(255)
+  config            Json
+  status            KonnectorStatus @default(CONFIGURING)
+  status_reason     String?         @db.VarChar(255)
+  status_changed_at DateTime?       @db.Timestamptz(6)
+  last_run_at       DateTime?       @db.Timestamptz(6)
+  next_run_at       DateTime?       @db.Timestamptz(6)
+  project_id        String
+  org_id            String
+
+  // Relations
+  tenant      Tenant            @relation(fields: [tenant_id], references: [id])
+  tenant_user TenantUser        @relation(fields: [tenant_user_id], references: [id])
+  template    KonnectorTemplate @relation(fields: [template_id], references: [id])
+  project     Project           @relation(fields: [project_id], references: [id])
+  org         Org               @relation(fields: [org_id], references: [id])
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([tenant_id])
+  @@index([tenant_user_id])
+  @@index([template_id])
+  @@index([status])
+  @@index([project_id])
+  @@index([org_id])
+  @@index([next_run_at])
+  @@map("konnectors")
+}
+
+model KonnectorTemplate {
+  id          String @id @default(cuid())
+  project_id  String
+  org_id      String
+  name        String @db.VarChar(255)
+  description String @db.Text
+  schema      Json
+
+  // Relations
+  project    Project     @relation(fields: [project_id], references: [id])
+  org        Org         @relation(fields: [org_id], references: [id])
+  konnectors Konnector[]
+
+  // Timestamps with high precision
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  sys_created_at DateTime  @default(now()) @db.Timestamptz(6)
+  sys_updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([project_id])
+  @@index([org_id])
+  @@map("konnector_templates")
+}
+
+model EncryptionKey {
+  id         String   @id @default(cuid())
+  key_id     String   @unique
+  key_data   String
+  is_active  Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([key_id])
+  @@index([is_active])
+  @@map("encryption_keys")
+}
