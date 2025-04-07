@@ -1,0 +1,14 @@
+{
+  "eslint.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": ["javascript", "typescript"],
+  "editor.formatOnSave": true,
+  "eslint.alwaysShowStatus": true,
+  "eslint.run": "onSave",
+  "eslint.lintTask.enable": true,
+  "eslint.options": {
+    "overrideConfigFile": ".eslintrc.js"
+  }
+}
