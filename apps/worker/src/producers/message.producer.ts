@@ -14,6 +14,7 @@ export class MessageProducerService {
 
   constructor(
     @InjectQueue('ReplyMessageQueue') private readonly replyMessageQueue: Queue,
+    @InjectQueue('BulkMessageQueue') private readonly bulkMessageQueue: Queue,
   ) {}
 
   async addToReplyMessageQueue(data: ReplyMessageJobData, opts?: any) {
@@ -36,6 +37,32 @@ export class MessageProducerService {
     });
 
     this.logger.log(`Job ${job.id} added to reply message queue`);
+    return job;
+  }
+
+  async addBulkMessages(
+    messageCount: number,
+    template: Partial<ReplyMessageJobData> = {},
+  ) {
+    this.logger.log(`Adding bulk job to process ${messageCount} messages`);
+
+    const job = await this.bulkMessageQueue.add(
+      'process-bulk-messages',
+      {
+        count: messageCount,
+        template,
+      },
+      {
+        attempts: 2,
+        backoff: {
+          type: 'fixed',
+          delay: 10000,
+        },
+        removeOnComplete: 50,
+      },
+    );
+
+    this.logger.log(`Bulk job ${job.id} added to queue`);
     return job;
   }
 }

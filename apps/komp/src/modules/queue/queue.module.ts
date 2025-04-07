@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EmailProducerService } from 'apps/worker/src/producers/email.producer';
+import { MessageProducerService } from '../../../../worker/src/producers/message.producer';
 
 @Module({
   imports: [
@@ -19,12 +19,11 @@ import { EmailProducerService } from 'apps/worker/src/producers/email.producer';
       }),
     }),
     BullModule.registerQueue(
-      { name: 'emailQueue' },
-      { name: 'processingQueue' },
       { name: 'ReplyMessageQueue' },
+      { name: 'BulkMessageQueue' },
     ),
   ],
-  providers: [EmailProducerService],
-  exports: [EmailProducerService],
+  providers: [MessageProducerService],
+  exports: [MessageProducerService],
 })
-export class ClientModule {}
+export class QueueModule {}

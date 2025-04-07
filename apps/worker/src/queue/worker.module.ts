@@ -1,11 +1,10 @@
 import { Module, Global, DynamicModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EmailProcessor } from '../processors/email.processor';
-import { DataProcessor } from '../processors/data.processor';
-import { EmailProducerService } from '../producers/email.producer';
-import { MessageProducerService } from '../producers/message.producer';
 import { CommonQueueModule } from 'apps/worker/common/queue/queue.module';
+import { MessageProcessor } from '../processors/message.processor';
+import { BulkMessageProcessor } from '../processors/bulk-message.processor';
+import { MessageProducerService } from '../producers/message.producer';
 
 @Global()
 @Module({})
@@ -41,15 +40,15 @@ export class WorkerModule {
           { name: 'emailQueue' },
           { name: 'processingQueue' },
           { name: 'ReplyMessageQueue' },
+          { name: 'BulkMessageQueue' },
         ),
       ],
       providers: [
-        EmailProducerService,
-        EmailProcessor,
-        DataProcessor,
         MessageProducerService,
+        MessageProcessor,
+        BulkMessageProcessor,
       ],
-      exports: [EmailProducerService, MessageProducerService],
+      exports: [MessageProducerService],
     };
   }
 }

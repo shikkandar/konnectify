@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
-import { KompController } from './komp.controller';
-import { KompService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from 'db/database';
-import { ClientModule } from './queue/client.module';
+import { MessageController } from './modules/message/message.controller';
+import { QueueModule } from './modules/queue/queue.module';
 
 @Module({
-  imports: [DatabaseModule, ClientModule],
-  controllers: [KompController],
-  providers: [KompService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    DatabaseModule,
+    QueueModule,
+  ],
+  controllers: [MessageController],
 })
 export class KompModule {}

@@ -1,17 +1,16 @@
+import { WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { ReadyService } from 'apps/worker/common/queue/ready.service';
 
-export abstract class BaseProcessor {
-  protected logger: Logger;
+export abstract class BaseProcessor extends WorkerHost {
+  protected readonly logger: Logger;
 
-  constructor(protected readonly readyService: ReadyService) {
-    // Use the child class name for the logger
+  constructor(private readonly readyService: ReadyService) {
+    super();
     this.logger = new Logger(this.constructor.name);
   }
 
-  protected async ensureApplicationReady(
-    jobId: string | number,
-  ): Promise<void> {
+  protected async ensureApplicationReady(jobId: string): Promise<void> {
     try {
       if (!this.readyService.isApplicationReady()) {
         this.logger.log(`Job ${jobId} waiting for application to be ready...`);
@@ -25,7 +24,4 @@ export abstract class BaseProcessor {
       throw error;
     }
   }
-
-  // Abstract method to be implemented by child classes
-  abstract process(job: any): Promise<any>;
 }
