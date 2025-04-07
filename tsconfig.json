@@ -18,24 +18,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "app/common": [
-        "libs/common/src"
-      ],
-      "app/common/*": [
-        "libs/common/src/*"
-      ],
-      "db/database": [
-        "libs/database/src"
-      ],
-      "db/database/*": [
-        "libs/database/src/*"
-      ],
-      "queue/queue-shared": [
-        "libs/queue-shared/src"
-      ],
-      "queue/queue-shared/*": [
-        "libs/queue-shared/src/*"
-      ]
+      "@app/common": ["libs/common/src"],
+      "@app/common/*": ["libs/common/src/*"],
+      "@db/database": ["libs/database/src"],
+      "@db/database/*": ["libs/database/src/*"],
+      "@queue/queue-shared": ["libs/queue-shared/src"],
+      "@queue/queue-shared/*": ["libs/queue-shared/src/*"]
     }
   }
 }
