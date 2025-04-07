@@ -9,7 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('WORKER_PORT', 3001);
+  const port = configService.get<number>('WORKER_PORT', 8001);
 
   await app.listen(port);
   logger.log(`Worker service is running on port ${port}`);
